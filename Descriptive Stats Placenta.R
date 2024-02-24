@@ -129,13 +129,6 @@ describeFactors(placentas_no_twins$eth_cat)
 summary(placentas_no_twins$b_age) # check that Missing are coded as NA and not as 999 or something like that. Should be NA
 placentas_no_twins$b_age <- ifelse(placentas_no_twins$b_age == 999, NA, placentas_no_twins$b_age)
 
-## Employment
-describeFactors(placentas_no_twins$b_employment)
-placentas_no_twins$employ <- case_when(
-  placentas_no_twins$b_employment == 1 ~ "Employed",
-  placentas_no_twins$b_employment == 2 ~ "Unemployed"
-)
-describeFactors(placentas_no_twins$employ)
 
 ### calculate gestational age at testing
 # EDD is only available on the placentas_no_twins data set, therefore, some of the people tested will be missing GA at testing/diagnosis
@@ -150,7 +143,7 @@ placentas_no_twins$e_diagnosis <- as.Date(placentas_no_twins$e_diagnosis.x)
 # replace 9999-09-09 with NA
 placentas_no_twins$i_deliverydate_est <- replace(placentas_no_twins$i_deliverydate_est, which(placentas_no_twins$i_deliverydate_est == "9999-09-09"), NA)
 
-# split maternal age and GA at diagnosis into categories
+# split maternal age  
 placentas_no_twins$age_cat <- factor(case_when(
   placentas_no_twins$b_age <25 ~ "<25 years",
   placentas_no_twins$b_age <30 ~ "25-29 years",
@@ -161,6 +154,11 @@ placentas_no_twins$age_cat <- factor(case_when(
 levels = c("<25 years", "25-29 years", "30-35 years", "36-39 years", "≥40 years"))
 
 describeFactors(placentas_no_twins$age_cat)
+
+summary(placentas_no_twins$b_age)
+
+# GA at diagnosis into categories
+
 
 # maternal BMI
 placentas_no_twins$i_weight <- replace(placentas_no_twins$i_weight, which(placentas_no_twins$i_weight == 999 | placentas_no_twins$i_weight == 666), NA)
@@ -233,11 +231,13 @@ placentas_no_twins$gravida <- factor(case_when(
 
 ## losses/stillbirth
 placentas_no_twins$p_outcome <- case_when(
-  placentas_no_twins$p_outcome == 1 ~ "Loss",
   placentas_no_twins$p_outcome == 2 ~ "Stillbirth",
   placentas_no_twins$p_outcome == 3 ~ "Livebirth"
 )
 
+factor(placentas_no_twins$p_outcome)
+
+describeFactors(placentas_no_twins$p_outcome)
 
 # mode of delivery
 # Vag/CS
@@ -246,8 +246,12 @@ placentas_no_twins$mode_del <- case_when(
   placentas_no_twins$p_mode == 2 ~ "CS"
 )
 
+describeFactors(placentas_no_twins$mode_del)
+
 # 5 minute apgar
 placentas_no_twins$apgar5 <- factor(ifelse(placentas_no_twins$s_apgar_5 < 7, "<7", "≥7"))
+
+describeFactors(placentas_no_twins$apgar5)
 
 # birth weight
 placentas_no_twins$bw_cat <- case_when(
@@ -256,6 +260,10 @@ placentas_no_twins$bw_cat <- case_when(
   placentas_no_twins$s_bw_gm > 4000 ~ ">4000"
 )
 
+describeFactors(placentas_no_twins$bw_cat)
+
+summary(placentas_no_twins$s_bw_gm)
+
 # NICU admission
 # assuming if we have birth weight then we should know if baby admitted to NICU or not
 placentas_no_twins$NICU <- case_when(
@@ -263,17 +271,28 @@ placentas_no_twins$NICU <- case_when(
   placentas_no_twins$t_nicu == 0 ~ "No",
   is.na(placentas_no_twins$s_bw_gm) == FALSE ~ "No")
 
+describeFactors(placentas_no_twins$NICU)
+
 # duration of admission
 placentas_no_twins$nicu_dur <- as.numeric(as.Date(placentas_no_twins$t_nicu_discharge) - as.Date(placentas_no_twins$t_nicu_admission))
 
-placentas_no_twins$ga_at_diag <- as.numeric((280 - (as.Date(placentas_no_twins$i_deliverydate_est) - as.Date(placentas_no_twins$d_naso1_collect)))/7) # in weeks
+diag_date <- case_when(
+       !is.na(placentas_no_twins$d_naso1_collect) ~ as.Date(placentas_no_twins$d_naso1_collect),
+       .default = as.Date(placentas_no_twins$d_other_collect)
+       )
+placentas_no_twins$ga_at_diag <- as.numeric((280 - (as.Date(placentas_no_twins$i_deliverydate_est) - diag_date))/7) # in weeks
 # describeMedian(placentas_no_twins$ga_at_diag, iqr = FALSE) # check the range and fix any that are not possible - or remove. <0 and >43 weeks
 placentas_no_twins$ga_at_diag <- replace(placentas_no_twins$ga_at_diag, which(placentas_no_twins$ga_at_diag >43 | placentas_no_twins$ga_at_diag < 0), NA)
 
 placentas_no_twins$ga_dx_cat <- factor(case_when(
   placentas_no_twins$ga_at_diag <= 14 ~ "<=14 weeks",
-  placentas_no_twins$ga_at_diag < 27 ~ "14-27 weeks",
-  placentas_no_twins$ga_at_diag <38 ~ "28-38 weeks",
+  placentas_no_twins$ga_at_diag < 27 ~ "15-27 weeks",
+  placentas_no_twins$ga_at_diag < 38 ~ "28-37 weeks",
   placentas_no_twins$ga_at_diag >=38 ~ "≥38 weeks"
-), levels = c("<=14 weeks", "14-27 weeks", "28-38 weeks", "≥38 weeks"))
+), levels = c("<=14 weeks", "15-27 weeks", "28-37 weeks", "≥38 weeks"))
 
+any(which(placentas_no_twins$ga_at_diag < 37 & placentas_no_twins$ga_at_diag > 27 ))
+
+describeFactors(placentas_no_twins$ga_dx_cat)
+
+summary(placentas_no_twins$ga_at_diag)
