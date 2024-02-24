@@ -296,3 +296,53 @@ any(which(placentas_no_twins$ga_at_diag < 37 & placentas_no_twins$ga_at_diag > 2
 describeFactors(placentas_no_twins$ga_dx_cat)
 
 summary(placentas_no_twins$ga_at_diag)
+
+
+placentas_no_twins <- placentas_no_twins %>% mutate(covid_period = case_when(
+  e_diagnosis < as.Date("2021-04-04") ~ "pre-Delta",
+  e_diagnosis >= as.Date("2021-04-04") & e_diagnosis < as.Date("2021-12-19") ~ "Delta",
+  e_diagnosis >= as.Date("2021-12-19") ~ "Omicron"
+))
+
+describeFactors(placentas_no_twins$covid_period)
+
+## ga at delivery
+placentas_no_twins$ga_at_del <- as.numeric((280 - (as.Date(placentas_no_twins$i_deliverydate_est) - as.Date(placentas_no_twins$r_dob)))/7)
+
+
+placentas_no_twins$ga_del_cat <- case_when(
+  placentas_no_twins$ga_at_del < 28 ~ "extremely preterm",
+  placentas_no_twins$ga_at_del < 32 ~ "very preterm",
+  placentas_no_twins$ga_at_del < 34 ~ "moderate preterm",
+  placentas_no_twins$ga_at_del < 37 ~ "late preterm",
+  placentas_no_twins$ga_at_del >= 37 ~ "term",
+)
+
+
+describeFactors(placentas_no_twins$ga_del_cat) # missings
+
+# COVID outcomes
+
+## hospitalizations
+describeFactors(placentas_no_twins$e_hosp)
+
+#describeFactors(placentas_no_twins$abx_pne)
+describeFactors(placentas_no_twins$e_coag)
+describeFactors(placentas_no_twins$g_icu)
+describeFactors(placentas_no_twins$e_oxygen___1)
+describeFactors(placentas_no_twins$e_inv___1)
+describeFactors(placentas_no_twins$e_sepsis)
+
+
+describeFactors(placentas_no_twins$l_htn)
+
+describeFactors(placentas_no_twins$l_diab)
+
+describeFactors(placentas_no_twins$n_covid)
+
+placentas_no_twins$vacc_count <- case_when(
+  (!is.na(placentas_no_twins$n_covid_date1) & !is.na(placentas_no_twins$n_covid_date2)) ~ "two doses",
+  (!is.na(placentas_no_twins$n_covid_date1) & is.na(placentas_no_twins$n_covid_date2)) ~ "one doses"
+)
+
+describeFactors(placentas_no_twins$vacc_count)
