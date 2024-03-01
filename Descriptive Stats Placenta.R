@@ -24,7 +24,7 @@ library(ghibli)
 library(ggpubr)
 
 #### LOAD BC QIQA DATA ####
-data_bc <- read.csv("CanadianSurveillance_DATA_2024-02-23_1315.csv", header = TRUE)
+data_bc <- read.csv("CanadianSurveillance_DATA_2024-03-01_1309.csv", header = TRUE)
 
 data_bc[data_bc == ""] <- NA
 data_bc_1 <- data_bc %>% filter(redcap_event_name == "demographics_arm_1")
@@ -50,7 +50,7 @@ data_bc <- left_join(data_bc,data_bc_6, by = "a_record_id")
 dim(data_bc)
 
 
-twin_placenta_cases <- read.csv("CanadianSurveillance-NonSingletons_DATA_2024-02-23_1300.csv", header = TRUE)
+twin_placenta_cases <- read.csv("CanadianSurveillance-NonSingletons_DATA_2024-03-01_1316.csv", header = TRUE)
 
 twin_placenta_cases[twin_placenta_cases == ""] <- NA
 
@@ -66,14 +66,16 @@ dim(twin_placenta_cases)
 
 twin_placenta_cases <- twin_placenta_cases$a_record_id
 
-placentas <- read.csv("CanadianCOVID19InPre_DATA_2024-02-23_1254.csv", header = TRUE)
+placenta <- read.csv("CanadianCOVID19InPre_DATA_2024-03-01_1312.csv", header = TRUE)
 
-placentas <- placentas$cancovid_study_id
+placentas <- placenta$cancovid_study_id
 
-twin_placenta <- placentas[which(placentas %in% twin_placenta_cases)]
+twin_placentas <- placentas[which(placentas %in% twin_placenta_cases)]
 
 placentas_no_twins <- data_bc[which(data_bc$a_record_id %in% placentas
                               & data_bc$a_record_id %notin% twin_placenta_cases),]
+
+non_twin_placentas <- placenta[which(placenta$cancovid_study_id %notin% twin_placenta_cases),]
 
 ### DEFINE CATAGORIES ###
 
@@ -122,7 +124,6 @@ placentas_no_twins$eth_cat <- placentas_no_twins$eth
 levels(placentas_no_twins$eth_cat)[which(levels(placentas_no_twins$eth) == "East Asian" | levels(placentas_no_twins$eth) == "South East Asian")] <- "East or SE Asian"
 placentas_no_twins$eth_cat <- relevel(placentas_no_twins$eth_cat, ref = "White")
 describeFactors(placentas_no_twins$eth_cat)
-
 
 
 ## AGE
@@ -346,3 +347,102 @@ placentas_no_twins$vacc_count <- case_when(
 )
 
 describeFactors(placentas_no_twins$vacc_count)
+
+#### TABLE 2 ####
+
+summary(non_twin_placentas$placenta_weight)
+
+non_twin_placentas$wtcentile <- factor(case_when(
+  non_twin_placentas$placenta_wtcentile <= 5 ~ "<= 5th percentile",
+  non_twin_placentas$placenta_wtcentile < 25 ~ "5th - 25th percentile",
+  non_twin_placentas$placenta_wtcentile < 50 ~ "25th - 50th percentile",
+  non_twin_placentas$placenta_wtcentile < 75 ~ "50th - 75th percentile",
+  non_twin_placentas$placenta_wtcentile < 95 ~ "75th - 95th percentile",
+  non_twin_placentas$placenta_wtcentile >= 95 ~ "≥ 95th percentile"
+  
+), levels = c("<= 5th percentile","5th - 25th percentile",
+              "25th - 50th percentile","50th - 75th percentile", 
+              "75th - 95th percentile","≥ 95th percentile"))
+
+describeFactors(non_twin_placentas$wtcentile)
+
+## VASCULAR MALPERFUSION ##
+
+describeFactors(non_twin_placentas$maternal_vascular_malperfu)
+
+## Infarction ##
+describeFactors(non_twin_placentas$mvm_finding___5)
+
+## Retroplacental Hemorrhage ##
+describeFactors(non_twin_placentas$mvm_finding___1)
+
+## Distal Villous Hypoplasia ##
+describeFactors(non_twin_placentas$mvm_finding___2)
+
+## Accelerated Villous Maturation ##
+describeFactors(non_twin_placentas$mvm_finding___3)
+
+## Decidual Arteriopathy ##
+describeFactors(non_twin_placentas$mvm_finding___4)
+
+## Other ##
+describeFactors(non_twin_placentas$mvm_finding___99)
+
+## Increased Perivillous Fibrin ##
+describeFactors(non_twin_placentas$increased_perivillous_fibr)
+
+## Fetal Vascular Malperfusion ## 
+
+describeFactors(non_twin_placentas$fetal_vascular_malperfusio)
+
+# Thrombosis (chorionic plate / stem villous) #
+describeFactors(non_twin_placentas$fvm_findings___1)
+
+# Avascular villi #
+describeFactors(non_twin_placentas$fvm_findings___2)
+
+# Villous stromal vascular karyorrhexis #
+describeFactors(non_twin_placentas$fvm_findings___3)
+
+# Stem vessel obliteration #
+describeFactors(non_twin_placentas$fvm_findings___4)
+
+# 	Intramural fibrin deposition #
+describeFactors(non_twin_placentas$fvm_findings___5)
+
+# 	Other #
+describeFactors(non_twin_placentas$fvm_findings___99)
+
+## Acute Inflamation ##
+
+describeFactors(non_twin_placentas$acute_inflammation)
+
+# Maternal #
+describeFactors(non_twin_placentas$acute_inflammation_type___1)
+
+# fetal #
+describeFactors(non_twin_placentas$acute_inflammation_type___2)
+
+## Chronic Inflamation ##
+
+describeFactors(non_twin_placentas$chronic_inflammation)
+
+
+#Chronic histiocytic intervillositis#
+describeFactors(non_twin_placentas$ci_findings___1)
+
+#Chronic villitis#
+describeFactors(non_twin_placentas$ci_findings___2)
+
+#Villitis of unknown etiology#
+describeFactors(non_twin_placentas$ci_findings___3)
+
+#other#
+describeFactors(non_twin_placentas$ci_findings___99)
+
+## Delayed Villous Maturation ##
+describeFactors(non_twin_placentas$delayed_villous_maturation)
+
+## COVID TESTING ##
+describeFactors(non_twin_placentas$ancillary_tests_for_covid)
+
